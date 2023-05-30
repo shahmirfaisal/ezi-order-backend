@@ -18,24 +18,28 @@ app.use(express.json())
 app.use(cors())
 
 app.post("/image", async (req, res) => {
-  const { text } = req.body
+  try {
+    const { text } = req.body
 
-  const response = await axios.get(
-    `https://v1.slashapi.com/shahmir/qr-code/7OUNqcFrtQ?text=${text}`,
-    {
-      responseType: "arraybuffer"
-    }
-  )
+    const response = await axios.get(
+      `https://v1.slashapi.com/shahmir/qr-code/7OUNqcFrtQ?text=${text}`,
+      {
+        responseType: "arraybuffer"
+      }
+    )
 
-  const imageData = Buffer.from(response.data, "binary").toString("base64")
+    const imageData = Buffer.from(response.data, "binary").toString("base64")
 
-  const result = await cloudinary.uploader.upload(
-    `data:image/jpeg;base64,${imageData}`
-  )
+    const result = await cloudinary.uploader.upload(
+      `data:image/jpeg;base64,${imageData}`
+    )
 
-  res.json({
-    image: result.secure_url
-  })
+    res.json({
+      image: result.secure_url
+    })
+  } catch (error) {
+    res.status(500).json({ message: "Something went wrong!" })
+  }
 })
 
 const PORT = process.env.PORT || 5000
