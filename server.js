@@ -3,8 +3,11 @@ import cors from "cors"
 import axios from "axios"
 import { v2 as cloudinary } from "cloudinary"
 import dotenv from "dotenv"
+import Stripe from "stripe"
 
 dotenv.config()
+
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
@@ -40,6 +43,23 @@ app.post("/image", async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: "Something went wrong!" })
   }
+})
+
+app.post("/create-payment-intent", async (req, res) => {
+  const { price } = req.body
+
+  // Create a PaymentIntent with the order amount and currency
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: price * 100,
+    currency: "usd",
+    automatic_payment_methods: {
+      enabled: true
+    }
+  })
+
+  res.json({
+    clientSecret: paymentIntent.client_secret
+  })
 })
 
 const PORT = process.env.PORT || 5000
